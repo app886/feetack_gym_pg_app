@@ -19,15 +19,29 @@ val localProperties = Properties().apply {
     }
 }
 
-// Load key.properties
+// Load key.properties (check both android/ and root directory)
+val keystorePropertiesFile = sequenceOf(
+    rootProject.file("key.properties"),
+    rootProject.file("../key.properties")
+).firstOrNull { it.exists() }
+
 val keystoreProperties = Properties().apply {
-    val keystorePropertiesFile = rootProject.file("key.properties")
-    if (keystorePropertiesFile.exists()) {
+    if (keystorePropertiesFile != null && keystorePropertiesFile.exists()) {
         FileInputStream(keystorePropertiesFile).use { stream ->
             load(stream)
         }
     }
 }
+
+val storeFilePath = keystoreProperties.getProperty("storeFile")
+val keystoreFile = if (storeFilePath != null) {
+    val f = file(storeFilePath)
+    if (f.exists()) f else {
+        val f2 = keystorePropertiesFile?.parentFile?.resolve(storeFilePath)
+        if (f2 != null && f2.exists()) f2 else null
+    }
+} else null
+
 android {
 //    namespace = "com.myfoozzybusiness"
     namespace = "com.tpipay.feetrack_student_parent"
@@ -45,11 +59,13 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
-            storeFile = keystoreProperties.getProperty("storeFile")?.let { path -> file(path) }
-            storePassword = keystoreProperties.getProperty("storePassword")
+        if (keystoreFile != null && keystoreFile.exists()) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = keystoreFile
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
         }
     }
 
@@ -64,7 +80,8 @@ android {
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            val releaseSigningConfig = signingConfigs.findByName("release")
+            signingConfig = releaseSigningConfig ?: signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
