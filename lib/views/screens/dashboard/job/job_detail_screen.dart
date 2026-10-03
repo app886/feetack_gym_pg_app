@@ -10,10 +10,12 @@ import 'widget/job_detail_bottom_bar.dart';
 
 class JobDetailScreen extends StatefulWidget {
   final JobPostModel job;
+  final String? referralCode;
 
   const JobDetailScreen({
     super.key,
     required this.job,
+    this.referralCode,
   });
 
   @override
@@ -26,11 +28,17 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch fresh details from API using the job ID
-    if (widget.job.id != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.find<JobController>().getJobDetails(widget.job.id!);
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchJobDetails();
+    });
+  }
+
+  Future<void> _fetchJobDetails() async {
+    final controller = Get.find<JobController>();
+    if (widget.referralCode != null && widget.referralCode!.isNotEmpty) {
+      await controller.getJobDetailsByReferral(widget.referralCode!);
+    } else if (widget.job.id != null) {
+      await controller.getJobDetails(widget.job.id!);
     }
   }
 
@@ -40,54 +48,75 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       backgroundColor: const Color(0xFFF3F6FC), // High-end app background
       body: GetBuilder<JobController>(
         builder: (jobController) {
+          final detailData = jobController.selectedJob;
+
           return Stack(
             children: [
               Column(
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Top Header Section (Gradient + Logo + Basic info)
-                          JobDetailHeader(
-                            job: widget.job,
-                            detailData: jobController.selectedJob,
-                          ),
-                          
-                          // Tab Bar Selection - styled as a floating bar or pinned section
-                          Container(
-                            margin: EdgeInsets.only(top: 12.h),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                            ),
-                            child: JobDetailTabs(
-                              selectedIndex: _currentTabIndex,
-                              onTabChanged: (index) {
-                                setState(() {
-                                  _currentTabIndex = index;
-                                });
-                              },
-                            ),
-                          ),
-                          
-                          // Show loader if fetching fresh details
-                          if (jobController.isLoading && jobController.selectedJob == null)
-                            Container(
-                              height: 300.h,
-                              alignment: Alignment.center,
-                              child: const CircularProgressIndicator(),
-                            )
-                          else
-                            JobDetailContent(
-                              selectedIndex: _currentTabIndex,
+                    child: RefreshIndicator(
+                      onRefresh: _fetchJobDetails,
+                      color: const Color(0xFF1554C0),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Top Header Section
+                            JobDetailHeader(
                               job: widget.job,
-                              detailData: jobController.selectedJob,
+                              detailData: detailData,
+                              referralCode: widget.referralCode,
                             ),
-                          
-                          SizedBox(height: 100.h), // Spacing for sticky bottom bar
-                        ],
+
+                            // Tab Bar Selection
+                            Container(
+                              margin: EdgeInsets.only(top: 12.h),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                              ),
+                              child: JobDetailTabs(
+                                selectedIndex: _currentTabIndex,
+                                onTabChanged: (index) {
+                                  setState(() {
+                                    _currentTabIndex = index;
+                                  });
+                                },
+                              ),
+                            ),
+
+                            // Loading state or Content
+                            if (jobController.isLoading && detailData == null)
+                              Container(
+                                height: 300.h,
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const CircularProgressIndicator(color: Color(0xFF1554C0)),
+                                    SizedBox(height: 16.h),
+                                    Text(
+                                      "Loading Job Details...",
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF667085),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              JobDetailContent(
+                                selectedIndex: _currentTabIndex,
+                                job: widget.job,
+                                detailData: detailData,
+                              ),
+
+                            SizedBox(height: 100.h), // Spacing for sticky bottom bar
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -98,7 +127,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         },
       ),
       // Sticky bottom section
-      bottomNavigationBar: const JobDetailBottomBar(),
+      bottomNavigationBar: GetBuilder<JobController>(
+        builder: (jobController) {
+          final detailData = jobController.selectedJob;
+          final jobId = detailData?.id ?? widget.job.id;
+          final jobTitle = detailData?.header?.jobTitle ?? widget.job.jobTitle;
+
+          return JobDetailBottomBar(
+            jobId: jobId,
+            jobTitle: jobTitle,
+            referralCode: widget.referralCode,
+          );
+        },
+      ),
     );
   }
 }

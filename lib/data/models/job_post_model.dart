@@ -4,6 +4,10 @@ class JobPostModel {
   String? createdBy;
   String? jobTitle;
   String? jobCode;
+  String? jobCity;
+  String? country;
+  String? radiusRule;
+  String? distanceKm;
   int? departmentId;
   int? branchId;
   String? employmentType;
@@ -18,6 +22,12 @@ class JobPostModel {
   String? skills;
   String? status;
   String? bannerUrl;
+  String? resumeUrl;
+  String? designation;
+  String? address;
+  String? referralCode;
+  String? createdAt;
+  String? updatedAt;
   JobDepartment? department;
   JobBranch? branch;
   JobCreator? creator;
@@ -28,6 +38,10 @@ class JobPostModel {
     this.createdBy,
     this.jobTitle,
     this.jobCode,
+    this.jobCity,
+    this.country,
+    this.radiusRule,
+    this.distanceKm,
     this.departmentId,
     this.branchId,
     this.employmentType,
@@ -42,6 +56,12 @@ class JobPostModel {
     this.skills,
     this.status,
     this.bannerUrl,
+    this.resumeUrl,
+    this.designation,
+    this.address,
+    this.referralCode,
+    this.createdAt,
+    this.updatedAt,
     this.department,
     this.branch,
     this.creator,
@@ -53,6 +73,10 @@ class JobPostModel {
     createdBy = json['created_by']?.toString();
     jobTitle = json['job_title']?.toString();
     jobCode = json['job_code']?.toString();
+    jobCity = json['job_city']?.toString();
+    country = json['country']?.toString();
+    radiusRule = json['radius_rule']?.toString();
+    distanceKm = json['distance_km']?.toString();
     departmentId = json['department_id'] != null ? int.tryParse(json['department_id'].toString()) : null;
     branchId = json['branch_id'] != null ? int.tryParse(json['branch_id'].toString()) : null;
     employmentType = json['employment_type']?.toString();
@@ -67,9 +91,47 @@ class JobPostModel {
     skills = json['skills']?.toString();
     status = json['status']?.toString();
     bannerUrl = json['banner_url']?.toString();
-    department = json['department'] != null ? JobDepartment.fromJson(json['department']) : null;
-    branch = json['branch'] != null ? JobBranch.fromJson(json['branch']) : null;
-    creator = json['creator'] != null ? JobCreator.fromJson(json['creator']) : null;
+    resumeUrl = (json['resume_url'] ?? json['resume'] ?? json['file_url'] ?? json['file'] ?? json['cv_url'] ?? json['document_url'])?.toString();
+    designation = json['designation']?.toString();
+    address = json['address']?.toString();
+    referralCode = json['referral_code']?.toString();
+    createdAt = json['created_at']?.toString();
+    updatedAt = json['updated_at']?.toString();
+
+    // Fallback if data is wrapped inside nested 'job_post' or 'job'
+    if (json['job_post'] is Map || json['job'] is Map) {
+      final Map<String, dynamic> jobData = Map<String, dynamic>.from(json['job_post'] ?? json['job']);
+      jobTitle = jobTitle ?? jobData['job_title']?.toString();
+      jobCode = jobCode ?? jobData['job_code']?.toString();
+      jobCity = jobCity ?? jobData['job_city']?.toString();
+      country = country ?? jobData['country']?.toString();
+      radiusRule = radiusRule ?? jobData['radius_rule']?.toString();
+      distanceKm = distanceKm ?? jobData['distance_km']?.toString();
+      employmentType = employmentType ?? jobData['employment_type']?.toString();
+      experience = experience ?? jobData['experience']?.toString();
+      salary = salary ?? jobData['salary']?.toString();
+      vacanciesCount = vacanciesCount ?? (jobData['vacancies_count'] != null ? int.tryParse(jobData['vacancies_count'].toString()) : null);
+      referralBudget = referralBudget ?? jobData['referral_budget']?.toString();
+      referralAmount = referralAmount ?? jobData['referral_amount']?.toString();
+      applicationDeadline = applicationDeadline ?? jobData['application_deadline']?.toString();
+      jobDescription = jobDescription ?? jobData['job_description']?.toString();
+      skills = skills ?? jobData['skills']?.toString();
+      status = status ?? jobData['status']?.toString();
+      bannerUrl = bannerUrl ?? jobData['banner_url']?.toString();
+      if (department == null && jobData['department'] != null) {
+        department = JobDepartment.fromJson(Map<String, dynamic>.from(jobData['department']));
+      }
+      if (branch == null && jobData['branch'] != null) {
+        branch = JobBranch.fromJson(Map<String, dynamic>.from(jobData['branch']));
+      }
+      if (creator == null && jobData['creator'] != null) {
+        creator = JobCreator.fromJson(Map<String, dynamic>.from(jobData['creator']));
+      }
+    }
+
+    department = department ?? (json['department'] != null ? JobDepartment.fromJson(Map<String, dynamic>.from(json['department'])) : null);
+    branch = branch ?? (json['branch'] != null ? JobBranch.fromJson(Map<String, dynamic>.from(json['branch'])) : null);
+    creator = creator ?? (json['creator'] != null ? JobCreator.fromJson(Map<String, dynamic>.from(json['creator'])) : null);
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:vlr/controllers/job_candidate_profile_update_controller.dart';
 import 'package:vlr/data/models/candidate_profile_model.dart';
 import 'package:vlr/services/constants.dart';
+import 'package:vlr/services/theme.dart';
 
 class EditLocationBottomSheet extends StatefulWidget {
   final CandidateProfileData? candidateProfile;
@@ -214,7 +215,7 @@ class _EditLocationBottomSheetState extends State<EditLocationBottomSheet> {
                             "Add upto 3 cities",
                             style: TextStyle(fontSize: 14.sp, color: const Color(0xFF98A2B3)),
                           ),
-                          icon: Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFF0D8A48), size: 22.sp),
+                          icon: Icon(Icons.keyboard_arrow_down_rounded, color: primaryColor, size: 22.sp),
                           isExpanded: true,
                           items: _availableCities.map((city) {
                             return DropdownMenuItem<String>(
@@ -268,9 +269,9 @@ class _EditLocationBottomSheetState extends State<EditLocationBottomSheet> {
                         return Container(
                           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDF4),
+                            color: const Color(0xFFEBF0FF),
                             borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: const Color(0xFF86BAA1), width: 1.5),
+                            border: Border.all(color: primaryColor, width: 1.5),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -280,13 +281,13 @@ class _EditLocationBottomSheetState extends State<EditLocationBottomSheet> {
                                 style: TextStyle(
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF0D8A48),
+                                  color: primaryColor,
                                 ),
                               ),
                               SizedBox(width: 8.w),
                               GestureDetector(
                                 onTap: () => _removePreferredCity(city),
-                                child: Icon(Icons.close_rounded, size: 16.sp, color: const Color(0xFF0D8A48)),
+                                child: Icon(Icons.close_rounded, size: 16.sp, color: primaryColor),
                               ),
                             ],
                           ),
@@ -318,14 +319,14 @@ class _EditLocationBottomSheetState extends State<EditLocationBottomSheet> {
                           },
                           child: Row(
                             children: [
-                              Icon(Icons.my_location_rounded, size: 16.sp, color: const Color(0xFF0D8A48)),
+                              Icon(Icons.my_location_rounded, size: 16.sp, color: primaryColor),
                               SizedBox(width: 4.w),
                               Text(
                                 "Pick current location",
                                 style: TextStyle(
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF0D8A48),
+                                  color: primaryColor,
                                 ),
                               ),
                             ],
@@ -365,7 +366,7 @@ class _EditLocationBottomSheetState extends State<EditLocationBottomSheet> {
                     _buildTextField(
                       controller: _hometownController,
                       hintText: "Enter your hometown",
-                      borderColor: const Color(0xFF0D8A48),
+                      borderColor: primaryColor,
                     ),
 
                     SizedBox(height: 24.h),
@@ -395,7 +396,7 @@ class _EditLocationBottomSheetState extends State<EditLocationBottomSheet> {
                     height: 50.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF86BAA1),
+                        backgroundColor: primaryColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
@@ -452,7 +453,7 @@ class _EditLocationBottomSheetState extends State<EditLocationBottomSheet> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.r),
-          borderSide: const BorderSide(color: Color(0xFF0D8A48), width: 1.5),
+          borderSide: const BorderSide(color: primaryColor, width: 1.5),
         ),
       ),
     );

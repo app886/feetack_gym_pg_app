@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,32 +8,37 @@ import 'package:vlr/controllers/job_controller.dart';
 import 'package:vlr/data/models/job_post_model.dart';
 import 'package:vlr/data/models/job_detail_model.dart';
 import 'package:vlr/services/appsflyer_service.dart';
+import 'package:vlr/services/constants.dart';
+import 'package:vlr/views/screens/dashboard/job/applied_job_history_screen.dart';
 
 class JobDetailHeader extends StatelessWidget {
   final JobPostModel job;
   final JobDetailData? detailData;
+  final String? referralCode;
 
   const JobDetailHeader({
     super.key,
     required this.job,
     this.detailData,
+    this.referralCode,
   });
 
   void _shareJob(BuildContext context) async {
     final jobId = detailData?.id ?? job.id;
     final jobTitle = detailData?.header?.jobTitle ?? job.jobTitle ?? "Job";
-    final companyName = detailData?.header?.companyName ?? job.department?.name;
+    final companyName = detailData?.header?.companyName ?? detailData?.companyDetail?.companyName ?? job.department?.name;
 
     if (jobId == null) return;
 
     final jobController = Get.find<JobController>();
 
-    // Generate Feetrack + 9 random digits (e.g., Feetrack145874526)
     final random = Random();
     final digits = List.generate(9, (_) => random.nextInt(10)).join();
-    final referralCode = 'Feetrack$digits';
+    final newReferralCode = 'Feetrack$digits';
 
-    // Show loading indicator while generating link
+    dev.log('==================================================', name: 'SHARE_JOB');
+    dev.log('1. Generated Referral Code: $newReferralCode for Job ID: $jobId', name: 'SHARE_JOB');
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Generating share link...'),
@@ -40,31 +46,40 @@ class JobDetailHeader extends StatelessWidget {
       ),
     );
 
-    // Hit the referral API
     bool success = await jobController.shareReferral(
       postId: jobId,
-      referralCode: referralCode,
+      referralCode: newReferralCode,
     );
 
+    dev.log('2. Share Referral API Response Success: $success', name: 'SHARE_JOB');
+
     if (success) {
-      // Generate AppsFlyer OneLink for this job
       final shareUrl = await AppsFlyerService.generateJobShareLink(
         jobId: jobId,
         jobTitle: jobTitle,
         companyName: companyName,
-        referralCode: referralCode,
+        referralCode: newReferralCode,
       );
 
+      dev.log('3. Generated OneLink URL: $shareUrl', name: 'SHARE_JOB');
+
       if (shareUrl != null) {
+        final shareMessage = "Check out this job: $jobTitle\nCompany: ${companyName ?? 'Feetrack'}\n\nUse my referral code: $newReferralCode\n\nApply here: $shareUrl";
+        dev.log('4. FINAL SHARE MESSAGE:\n$shareMessage', name: 'SHARE_JOB');
+        dev.log('==================================================', name: 'SHARE_JOB');
+
         Share.share(
-          "Check out this job: $jobTitle\nCompany: $companyName\n\nUse my referral code: $referralCode\n\nApply here: $shareUrl",
+          shareMessage,
           subject: "Job Opportunity: $jobTitle",
         );
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to generate referral link. Please try again.')),
-      );
+      dev.log('FAILED to record share referral on server.', name: 'SHARE_JOB');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to generate referral link. Please try again.')),
+        );
+      }
     }
   }
 
@@ -91,6 +106,11 @@ class JobDetailHeader extends StatelessWidget {
                     if (loadingProgress == null) return child;
                     return const Center(child: CircularProgressIndicator(color: Colors.white));
                   },
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.white,
+                    padding: EdgeInsets.all(20.w),
+                    child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                  ),
                 ),
               ),
             ),
@@ -113,17 +133,20 @@ class JobDetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine which data to show
+    // Determine which data to show from detailData or fallback job
     final title = detailData?.header?.jobTitle ?? job.jobTitle ?? "N/A";
-    final company = detailData?.header?.companyName ?? job.department?.name ?? "Company";
-    final type = detailData?.header?.employmentType ?? job.employmentType ?? "Full Time";
-    final location = detailData?.header?.location ?? job.branch?.name ?? "Lucknow";
+    final company = detailData?.header?.companyName ?? detailData?.companyDetail?.companyName ?? detailData?.branch?.name ?? job.department?.name ?? "Company";
+    final type = detailData?.header?.employmentType ?? detailData?.jobDetail?.overview?.type ?? job.employmentType ?? "Full Time";
+    final location = detailData?.header?.location ?? detailData?.jobDetail?.overview?.jobCity ?? detailData?.branch?.name ?? job.branch?.name ?? "N/A";
     final applicants = detailData?.header?.applicantsCount ?? 0;
-    final bannerUrl = detailData?.bannerUrl ?? job.bannerUrl;
+    final jobCode = detailData?.jobCode ?? job.jobCode;
+    final logoUrl = detailData?.header?.logoUrl ?? detailData?.companyDetail?.logoUrl ?? detailData?.bannerUrl ?? detailData?.branch?.companyLogo ?? job.bannerUrl;
+    final distance = detailData?.jobDetail?.overview?.distance;
+    final referralAmount = detailData?.referralAmount;
 
     return Stack(
       children: [
-        // 1. Dark Gradient Top Background (Matching App Design)
+        // 1. Dark Gradient Top Background
         Container(
           height: 240.h,
           width: double.infinity,
@@ -144,12 +167,12 @@ class JobDetailHeader extends StatelessWidget {
           ),
         ),
 
-        // 2. Navigation & Title Section
+        // 2. Navigation & Main Card
         Column(
           children: [
             SizedBox(height: MediaQuery.of(context).padding.top + 5.h),
             
-            // Back & Share/Actions Row
+            // Back & Actions Row
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.w),
               child: Row(
@@ -166,19 +189,25 @@ class JobDetailHeader extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () => _shareJob(context),
+                        onPressed: () {
+                          navigate(
+                            context: context,
+                            page: const AppliedJobHistoryScreen(),
+                          );
+                        },
+                        tooltip: "Applied Job History",
                         icon: Icon(
-                          Icons.share_outlined,
+                          Icons.work_history_outlined,
                           color: Colors.white,
                           size: 22.sp,
                         ),
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () => _shareJob(context),
                         icon: Icon(
-                          Icons.more_vert_rounded,
+                          Icons.share_outlined,
                           color: Colors.white,
-                          size: 24.sp,
+                          size: 22.sp,
                         ),
                       ),
                     ],
@@ -189,7 +218,7 @@ class JobDetailHeader extends StatelessWidget {
 
             SizedBox(height: 10.h),
 
-            // Logo & Main Title inside a Card to create depth
+            // Logo & Job Info Card
             Container(
               margin: EdgeInsets.symmetric(horizontal: 20.w),
               padding: EdgeInsets.all(20.w),
@@ -209,8 +238,8 @@ class JobDetailHeader extends StatelessWidget {
                   // Company Logo
                   GestureDetector(
                     onTap: () {
-                      if (bannerUrl != null && bannerUrl.isNotEmpty) {
-                        _showFullImage(context, bannerUrl);
+                      if (logoUrl != null && logoUrl.isNotEmpty) {
+                        _showFullImage(context, logoUrl);
                       }
                     },
                     child: Container(
@@ -223,11 +252,24 @@ class JobDetailHeader extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16.r),
-                        child: bannerUrl != null
-                            ? Image.network(bannerUrl, fit: BoxFit.cover)
+                        child: (logoUrl != null && logoUrl.isNotEmpty)
+                            ? Image.network(
+                                logoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Center(
+                                  child: Text(
+                                    title.isNotEmpty ? title[0].toUpperCase() : "J",
+                                    style: TextStyle(
+                                      fontSize: 28.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF1554C0),
+                                    ),
+                                  ),
+                                ),
+                              )
                             : Center(
                                 child: Text(
-                                  title.isNotEmpty ? title[0] : "J",
+                                  title.isNotEmpty ? title[0].toUpperCase() : "J",
                                   style: TextStyle(
                                     fontSize: 28.sp,
                                     fontWeight: FontWeight.bold,
@@ -239,7 +281,28 @@ class JobDetailHeader extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 16.h),
+                  SizedBox(height: 14.h),
+
+                  // Job Code Tag if available
+                  if (jobCode != null && jobCode.isNotEmpty) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                      ),
+                      child: Text(
+                        "Code: $jobCode",
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1D4ED8),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                  ],
 
                   // Job Title
                   Text(
@@ -259,12 +322,16 @@ class JobDetailHeader extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        company,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF667085),
+                      Flexible(
+                        child: Text(
+                          company,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF667085),
+                          ),
                         ),
                       ),
                       Padding(
@@ -282,17 +349,91 @@ class JobDetailHeader extends StatelessWidget {
                     ],
                   ),
 
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 16.h),
 
-                  // Location & Applicants Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  // Badges Row (Location, Applicants, Distance, Referral Amount)
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8.w,
+                    runSpacing: 8.h,
                     children: [
                       _buildMiniBadge(Icons.location_on_outlined, location, const Color(0xFF10B981)),
-                      SizedBox(width: 12.w),
                       _buildMiniBadge(Icons.people_alt_outlined, "$applicants Applicants", const Color(0xFF3B82F6)),
+                      if (distance != null && distance.isNotEmpty)
+                        _buildMiniBadge(Icons.near_me_outlined, distance, const Color(0xFF8B5CF6)),
+                      if (referralAmount != null && (referralAmount is num ? referralAmount > 0 : referralAmount.toString() != "0"))
+                        _buildMiniBadge(Icons.card_giftcard_rounded, "Reward: ₹$referralAmount", const Color(0xFFF59E0B)),
                     ],
                   ),
+
+                  SizedBox(height: 14.h),
+
+                  // View Applied History Button
+                  GestureDetector(
+                    onTap: () {
+                      navigate(
+                        context: context,
+                        page: const AppliedJobHistoryScreen(),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12.r),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.work_history_outlined, size: 16.sp, color: const Color(0xFF1554C0)),
+                          SizedBox(width: 6.w),
+                          Text(
+                            "View Applied History",
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1554C0),
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 10.sp, color: const Color(0xFF1554C0)),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Referral Code Applied Badge (if opened from referral deep link)
+                  if (referralCode != null && referralCode!.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                          width: 1.w,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.card_giftcard_rounded, size: 15.sp, color: const Color(0xFF059669)),
+                          SizedBox(width: 6.w),
+                          Text(
+                            "Referral Applied: $referralCode",
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF065F46),
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -314,16 +455,12 @@ class JobDetailHeader extends StatelessWidget {
         children: [
           Icon(icon, size: 14.sp, color: color),
           SizedBox(width: 6.w),
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
         ],
@@ -331,4 +468,3 @@ class JobDetailHeader extends StatelessWidget {
     );
   }
 }
-

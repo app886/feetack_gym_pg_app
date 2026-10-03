@@ -1,20 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/services/theme.dart';
+import 'package:vlr/data/models/candidate_profile_model.dart';
 import 'package:vlr/data/models/user_model.dart';
 import 'package:vlr/services/constants.dart';
-
+import 'package:vlr/views/screens/dashboard/job/user_job_profile/widgets/edit_location_bottom_sheet.dart';
+import 'package:vlr/views/screens/dashboard/job/user_job_profile/widgets/edit_basic_details_bottom_sheet.dart';
 class OtherDetailsWidget extends StatelessWidget {
   final UserModel? userModel;
+  final CandidateProfileData? candidateProfile;
 
   const OtherDetailsWidget({
     super.key,
     this.userModel,
+    this.candidateProfile,
   });
 
   @override
   Widget build(BuildContext context) {
-    final email = userModel?.email ?? "a@gmail.com";
-    final mobile = userModel?.mobile ?? "8926600736";
+    final email = userModel?.email ?? "test@gmail.com";
+    final mobile = userModel?.mobile ?? "7894561230";
+
+    // Location Subtitle
+    String locationSub = "Lucknow • Preferred locations";
+    if (candidateProfile?.preferredLocations != null && candidateProfile!.preferredLocations!.isNotEmpty) {
+      locationSub = "${candidateProfile!.preferredLocations!.join(', ')} • ${candidateProfile!.preferredLocations!.length} preferred location(s)";
+    }
+
+    // Job Preference Subtitle
+    List<String> prefParts = [];
+    if (candidateProfile?.preferredJobType != null) prefParts.add(candidateProfile!.preferredJobType!);
+    if (candidateProfile?.preferredWorkMode != null) prefParts.add(candidateProfile!.preferredWorkMode!);
+    if (candidateProfile?.preferredShift != null) prefParts.add(candidateProfile!.preferredShift!);
+    if (candidateProfile?.expectedSalary != null) prefParts.add("₹ ${candidateProfile!.expectedSalary} / month");
+    String jobPrefSub = prefParts.isNotEmpty
+        ? prefParts.join(" • ")
+        : "Full Time • Work from Office • Day Shift • ₹ 45,000 / month";
+
+    // Documents & Assets Subtitle
+    String docsSub = "PAN Card • Aadhaar Card • Android Phone • Laptop";
+    if (candidateProfile?.documentsAndAssets != null && candidateProfile!.documentsAndAssets!.isNotEmpty) {
+      docsSub = candidateProfile!.documentsAndAssets!.join(" • ");
+    }
+
+    // Basic details Subtitle
+    final gender = candidateProfile?.gender ?? "Male";
+    String basicSub = "$gender • $email • $mobile";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +84,9 @@ class OtherDetailsWidget extends StatelessWidget {
               ),
               SizedBox(height: 4.h),
               Text(
-                "Add your preferred job title/role to get recommendations",
+                candidateProfile?.preferredJobRoles != null && candidateProfile!.preferredJobRoles!.isNotEmpty
+                    ? candidateProfile!.preferredJobRoles!.join(", ")
+                    : "Add your preferred job title/role to get recommendations",
                 style: TextStyle(fontSize: 12.sp, color: const Color(0xFF667085)),
               ),
               SizedBox(height: 12.h),
@@ -66,10 +99,10 @@ class OtherDetailsWidget extends StatelessWidget {
                 onPressed: () {
                   showToast(message: "Add preferred title clicked", toastType: ToastType.info);
                 },
-                icon: Icon(Icons.add, size: 16.sp, color: const Color(0xFF0D8A48)),
+                icon: Icon(Icons.add, size: 16.sp, color: primaryColor),
                 label: Text(
                   "Add preferred title/role",
-                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: const Color(0xFF0D8A48)),
+                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: primaryColor),
                 ),
               ),
             ],
@@ -90,26 +123,45 @@ class OtherDetailsWidget extends StatelessWidget {
             children: [
               _buildDetailRow(
                 title: "Location",
-                subtitle: "Kaisarbagh, Lucknow • 2 preferred locations",
-                onTap: () {},
+                subtitle: locationSub,
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => EditLocationBottomSheet(
+                      candidateProfile: candidateProfile,
+                    ),
+                  );
+                },
               ),
               const Divider(height: 1, color: Color(0xFFF2F4F7)),
               _buildDetailRow(
                 title: "Job preference",
-                subtitle: "Full Time • Work from Office • Day Shift • ₹ 35,000 / month",
+                subtitle: jobPrefSub,
                 onTap: () {},
               ),
               const Divider(height: 1, color: Color(0xFFF2F4F7)),
               _buildDetailRow(
                 title: "Documents & assets",
-                subtitle: "PAN Card • Aadhaar Card • Android Phone • Laptop",
+                subtitle: docsSub,
                 onTap: () {},
               ),
               const Divider(height: 1, color: Color(0xFFF2F4F7)),
               _buildDetailRow(
                 title: "Basic details",
-                subtitle: "Male • $email • $mobile",
-                onTap: () {},
+                subtitle: basicSub,
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => EditBasicDetailsBottomSheet(
+                      userModel: userModel,
+                      candidateProfile: candidateProfile,
+                    ),
+                  );
+                },
               ),
             ],
           ),

@@ -1,4 +1,8 @@
+
+
 class BannerModel {
+
+
   final int? id;
   final String? title;
   final String? imageUrl;

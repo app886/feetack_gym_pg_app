@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vlr/ecomerce/entry_point.dart';
+
 import 'package:vlr/services/constants.dart';
+
 import 'package:vlr/views/screens/dashboard/home_screen/all_category_home/all_category_home_screen.dart';
+
 import 'package:vlr/views/screens/dashboard/job/job_screen.dart';
+
 import 'package:vlr/views/screens/dashboard/profile/profile_screen/profile_screen.dart';
-import 'package:vlr/views/screens/dashboard/shopping/shopping_screen.dart';
+
+import 'package:vlr/hospital/features/dashboard/presentation/screen/dashboard_screen.dart' as hospital;
 
 import '../../../controllers/dashboard_controller.dart';
 
@@ -41,9 +47,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       "label": "Shopping"
     },
     {
-      "activeIcon": Icons.upcoming_outlined,
-      "inactiveIcon": Icons.upcoming_outlined,
-      "label": "Coming soon"
+      "activeIcon": Icons.local_hospital_rounded,
+      "inactiveIcon": Icons.local_hospital_rounded,
+      "label": "Hospital"
     },
     {
       "activeIcon": Icons.person_rounded,
@@ -63,7 +69,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         if (controller.dashPage != 0) {
           controller.dashPage = 0;
-          controller.update();
           return;
         }
 
@@ -91,6 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Navigator.of(context).pop();
         }
       },
+
       child: Scaffold(
         extendBody: true,
         body: GetBuilder<DashBoardController>(
@@ -98,8 +104,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return [
               const AllCategoryHomeScreen(),
               const JobScreen(),
-              const ShoppingScreen(),
-              const JobScreen(),
+              const SizedBox(), // placeholder — Shopping navigates to EntryPoint
+              const SizedBox(), // placeholder — Hospital navigates to HospitalDashboardScreen
               // const AllCategoryScreen(),
               // const BookingScreen(),
               // const WalletScreen(),
@@ -111,8 +117,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           builder: (DashBoardController controller) {
             return SafeArea(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(
                       0xFFF0F4F8), // Light background like screenshot
@@ -134,8 +142,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
+                          if (index == 2) {
+                            // Navigate to EntryPoint as a separate screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const EntryPoint(),
+                              ),
+                            );
+                            return;
+                          }
+                          if (index == 3) {
+
+                            // Navigate to HospitalDashboardScreen as a separate screen
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const hospital.HospitalDashboardScreen(),
+                              ),
+                            );
+                            return;
+                          }
+
                           controller.dashPage = index;
                         },
+
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 250),
                           curve: Curves.easeInOut,
@@ -156,7 +188,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ? items[index]["activeIcon"]
                                     : items[index]["inactiveIcon"],
                                 size: 18,
-                                color: isActive ? Colors.white : Colors.black87,
+                                color:
+                                    isActive ? Colors.white : Colors.black87,
                               ),
                               const SizedBox(height: 2),
                               Text(

@@ -193,6 +193,7 @@ class AddMoneyScreen extends GetView<WalletController> {
                   ),
                 ),
               ),
+
               sizedBoxHeight(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

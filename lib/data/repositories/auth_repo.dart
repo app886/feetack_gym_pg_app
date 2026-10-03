@@ -5,6 +5,7 @@ import 'package:vlr/services/extensions.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/constants.dart';
+import '../../services/device_id_service.dart';
 import '../api/api_client.dart';
 
 class AuthRepo {
@@ -143,21 +144,6 @@ class AuthRepo {
   }
 
   Future<String> getDeviceId() async {
-    int count = 0;
-
-    while (OneSignal.User.pushSubscription.id.isNotValid && count < 0) {
-      await Future.delayed(const Duration(seconds: 1));
-      count++;
-
-      log(count.toString(), name: 'DeviceId Wait Count');
-      log('${OneSignal.User.pushSubscription.id}', name: "12345678");
-      log('${OneSignal.User.pushSubscription.token}', name: "12345678");
-    }
-
-    if (OneSignal.User.pushSubscription.id.isValid) {
-      return OneSignal.User.pushSubscription.id!;
-    } else {
-      return '12345678';
-    }
+    return await DeviceIdService.getDeviceId();
   }
 }

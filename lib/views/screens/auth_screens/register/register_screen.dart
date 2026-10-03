@@ -30,6 +30,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else {
         auth.mobileNoController.clear();
       }
+      if (widget.referralCode != null && widget.referralCode!.isNotEmpty) {
+        auth.referralCodeController.text = widget.referralCode!;
+      }
     });
   }
 

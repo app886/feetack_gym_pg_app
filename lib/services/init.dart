@@ -8,6 +8,7 @@ import 'package:vlr/controllers/coupons_controller.dart';
 import 'package:vlr/controllers/dashboard_controller.dart';
 import 'package:vlr/controllers/notification_controller.dart';
 import 'package:vlr/controllers/job_controller.dart';
+import 'package:vlr/controllers/job_candidate_profile_update_controller.dart';
 import 'package:vlr/data/repositories/job_repo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vlr/controllers/gym_controller.dart';
@@ -95,6 +96,7 @@ class Init {
       Get.lazyPut(() => AttendanceController(attendanceRepo: Get.find()));
       Get.lazyPut(() => NotificationController(notificationRepo: Get.find()));
       Get.lazyPut(() => JobController(jobRepo: Get.find()));
+      Get.lazyPut(() => JobCandidateProfileUpdateController(jobRepo: Get.find()));
     } catch (e) {
       log('---- ${e.toString()} ----', name: "ERROR AT initialize()");
     }

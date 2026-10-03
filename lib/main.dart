@@ -1,14 +1,12 @@
 import 'dart:developer';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:toastification/toastification.dart';
 import 'package:vlr/services/constants.dart';
 import 'package:vlr/services/theme.dart';
-import 'package:vlr/views/screens/splash_screen/splash_screen.dart';
 import 'package:vlr/services/appsflyer_service.dart';
+import 'package:vlr/services/app_router.dart';
 
 import 'firebase/get_fcm_token.dart';
 import 'services/init.dart';
@@ -100,16 +98,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
         minTextAdapt: true,
         // splitScreenMode: true,
-        child: GetMaterialApp(
+        child: MaterialApp.router(
           title: AppConstants.appName,
-          navigatorKey: navigatorKey,
           themeMode: ThemeMode.light, 
           theme: CustomTheme.light,
           debugShowCheckedModeBanner: false,
-          home: const SplashScreen(),
-          // home: const DashboardScreen(),
-          // home: const CouponCodeScreen(),
-          // home: const AutoPaySetupSuccessfullyScreen(),
+          routerConfig: AppRouter.router,
         ),
       ),
     );

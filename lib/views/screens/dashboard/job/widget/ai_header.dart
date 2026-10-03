@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/services/constants.dart';
 
 import 'package:vlr/views/base/custom_image.dart';
+
+import '../user_job_profile/screens/user_job_profile_screen.dart';
 
 class AiHeader extends StatelessWidget {
   const AiHeader({
@@ -80,31 +83,39 @@ class AiHeader extends StatelessWidget {
         // --------------------------------------------------
         // PROFILE
         // --------------------------------------------------
-        Container(
-          width: 58.w,
-          height: 58.w,
-          padding: EdgeInsets.all(2.w),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFF3298FF),
-              width: 2.w,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF3298FF).withValues(alpha: 0.40),
-                blurRadius: 12.r,
-                spreadRadius: 1.r,
+        InkWell(
+          onTap: (){
+            navigate(
+              context: context,
+              page: const UserJobProfileScreen(),
+            );
+          },
+          child: Container(
+            width: 58.w,
+            height: 58.w,
+            padding: EdgeInsets.all(2.w),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF3298FF),
+                width: 2.w,
               ),
-            ],
-          ),
-          child: const ClipOval(
-            child: CustomImage(
-              path: Assets.imagesTrainer1,
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-              isProfile: true,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3298FF).withValues(alpha: 0.40),
+                  blurRadius: 12.r,
+                  spreadRadius: 1.r,
+                ),
+              ],
+            ),
+            child: const ClipOval(
+              child: CustomImage(
+                path: Assets.imagesTrainer1,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                isProfile: true,
+              ),
             ),
           ),
         ),

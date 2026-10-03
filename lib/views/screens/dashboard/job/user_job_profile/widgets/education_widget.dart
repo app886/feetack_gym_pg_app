@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/services/theme.dart';
+import 'package:vlr/data/models/candidate_profile_model.dart';
 import 'package:vlr/services/constants.dart';
+import 'package:vlr/views/screens/dashboard/job/user_job_profile/screens/intership_and_work_experience_screen.dart';
 
 class EducationWidget extends StatelessWidget {
-  const EducationWidget({super.key});
+  final CandidateProfileData? candidateProfile;
+
+  const EducationWidget({
+    super.key,
+    this.candidateProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final highestEducation = candidateProfile?.highestEducation ?? "Graduate";
+    final doctorate = candidateProfile?.doctorate ?? "Explore";
+
+    final hasEdu = candidateProfile?.educations != null && candidateProfile!.educations!.isNotEmpty;
+    final edu = hasEdu ? candidateProfile!.educations!.first : null;
+
+    final degree = edu?.degree ?? "B.Sc., IT Mobile Application and Information Security";
+    final university = edu?.university ?? "Lucknow University";
+    final medium = edu?.medium ?? "English";
+    final type = edu?.type ?? "Full Time";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,15 +43,18 @@ class EducationWidget extends StatelessWidget {
             ),
             TextButton.icon(
               onPressed: () {
-                showToast(message: "Add Education clicked", toastType: ToastType.info);
+                navigate(
+                  context: context,
+                  page: const IntershipAndWorkExperienceScreen(isEducation: true),
+                );
               },
-              icon: Icon(Icons.add, size: 16.sp, color: const Color(0xFF0D8A48)),
+              icon: Icon(Icons.add, size: 16.sp, color: primaryColor),
               label: Text(
                 "Add",
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0D8A48),
+                  color: primaryColor,
                 ),
               ),
             ),
@@ -49,9 +71,28 @@ class EducationWidget extends StatelessWidget {
           ),
           child: Column(
             children: [
-              _buildRow("Highest education", "Graduate"),
+              _buildRow(
+                "Highest education",
+                highestEducation,
+                onTap: () {
+                  navigate(
+                    context: context,
+                    page: const IntershipAndWorkExperienceScreen(isEducation: true),
+                  );
+                },
+              ),
               const Divider(height: 1, color: Color(0xFFF2F4F7)),
-              _buildRow("Doctorate / PhD", "Explore", textColor: const Color(0xFF0D8A48)),
+              _buildRow(
+                "Doctorate / PhD",
+                doctorate,
+                textColor: doctorate == "Explore" || doctorate == "None" ? primaryColor : const Color(0xFF101828),
+                onTap: () {
+                  navigate(
+                    context: context,
+                    page: const IntershipAndWorkExperienceScreen(isEducation: true),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -88,7 +129,7 @@ class EducationWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "B.Sc. , IT Mobile Application and Information Security",
+                          degree,
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w800,
@@ -98,7 +139,7 @@ class EducationWidget extends StatelessWidget {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          "Lucknow University • Graduate",
+                          "$university • $highestEducation",
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w500,
@@ -110,18 +151,21 @@ class EducationWidget extends StatelessWidget {
                   ),
                   InkWell(
                     onTap: () {
-                      showToast(message: "Edit Education clicked", toastType: ToastType.info);
+                      navigate(
+                        context: context,
+                        page: const IntershipAndWorkExperienceScreen(isEducation: true),
+                      );
                     },
                     child: Row(
                       children: [
-                        Icon(Icons.edit_outlined, size: 14.sp, color: const Color(0xFF0D8A48)),
+                        Icon(Icons.edit_outlined, size: 14.sp, color: primaryColor),
                         SizedBox(width: 2.w),
                         Text(
                           "Edit",
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0D8A48),
+                            color: primaryColor,
                           ),
                         ),
                       ],
@@ -136,8 +180,8 @@ class EducationWidget extends StatelessWidget {
                 spacing: 8.w,
                 runSpacing: 6.h,
                 children: [
-                  _buildTagChip("English Medium"),
-                  _buildTagChip("Full Time"),
+                  if (medium.isNotEmpty) _buildTagChip("$medium Medium"),
+                  if (type.isNotEmpty) _buildTagChip(type),
                 ],
               ),
             ],
@@ -147,35 +191,38 @@ class EducationWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String title, String value, {Color? textColor}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF667085),
-            ),
-          ),
-          Row(
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w700,
-                  color: textColor ?? const Color(0xFF101828),
-                ),
+  Widget _buildRow(String title, String value, {Color? textColor, VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF667085),
               ),
-              SizedBox(width: 4.w),
-              Icon(Icons.chevron_right_rounded, size: 18.sp, color: const Color(0xFF98A2B3)),
-            ],
-          ),
-        ],
+            ),
+            Row(
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: textColor ?? const Color(0xFF101828),
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Icon(Icons.chevron_right_rounded, size: 18.sp, color: const Color(0xFF98A2B3)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

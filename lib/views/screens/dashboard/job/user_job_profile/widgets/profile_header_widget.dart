@@ -1,19 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/data/models/candidate_profile_model.dart';
 import 'package:vlr/data/models/user_model.dart';
 
 class ProfileHeaderWidget extends StatelessWidget {
   final UserModel? userModel;
+  final CandidateUserData? candidateUser;
+  final CandidateProfileData? candidateProfile;
 
   const ProfileHeaderWidget({
     super.key,
     this.userModel,
+    this.candidateUser,
+    this.candidateProfile,
   });
 
   @override
   Widget build(BuildContext context) {
-    final name = userModel?.name ?? "Mohd Zaid";
-    final profileImage = userModel?.image;
+    final name = candidateUser?.name ?? userModel?.name ?? "Mohd Zaid";
+    final profileImage = candidateUser?.profileImageUrl ?? userModel?.image;
+
+    String jobSubtitle = "Candidate";
+    if (candidateProfile?.workExperiences != null && candidateProfile!.workExperiences!.isNotEmpty) {
+      final exp = candidateProfile!.workExperiences!.first;
+      if (exp.jobTitle != null && exp.company != null) {
+        jobSubtitle = "${exp.jobTitle} at ${exp.company}";
+      } else if (exp.jobTitle != null) {
+        jobSubtitle = exp.jobTitle!;
+      }
+    } else if (candidateProfile?.preferredJobRoles != null && candidateProfile!.preferredJobRoles!.isNotEmpty) {
+      jobSubtitle = candidateProfile!.preferredJobRoles!.join(", ");
+    }
+
+    String locationText = "Lucknow, UP";
+    if (candidateProfile?.preferredLocations != null && candidateProfile!.preferredLocations!.isNotEmpty) {
+      locationText = candidateProfile!.preferredLocations!.join(", ");
+    }
 
     String initials = "MZ";
     if (name.trim().isNotEmpty) {
@@ -48,7 +70,7 @@ class ProfileHeaderWidget extends StatelessWidget {
             width: 64.w,
             height: 64.w,
             decoration: BoxDecoration(
-              color: const Color(0xFF3B2D54), // Dark Purple/Charcoal theme
+              color: const Color(0xFF3B2D54),
               shape: BoxShape.circle,
               image: profileImage != null && profileImage.isNotEmpty
                   ? DecorationImage(
@@ -93,7 +115,7 @@ class ProfileHeaderWidget extends StatelessWidget {
                     SizedBox(width: 4.w),
                     Expanded(
                       child: Text(
-                        "Flutter Developer at Zaleem",
+                        jobSubtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -113,7 +135,7 @@ class ProfileHeaderWidget extends StatelessWidget {
                     SizedBox(width: 4.w),
                     Expanded(
                       child: Text(
-                        "Kaisarbagh, Lucknow, UP",
+                        locationText,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

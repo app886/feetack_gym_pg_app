@@ -9,6 +9,7 @@ import 'package:pinput/pinput.dart';
 import 'package:vlr/controllers/auth_controller.dart';
 import 'package:vlr/data/api/api_checker.dart';
 import 'package:vlr/services/appsflyer_service.dart';
+import 'package:vlr/services/app_router.dart';
 import 'package:vlr/views/screens/dashboard/dashboard_screen.dart';
 
 import '../../../services/constants.dart';
@@ -94,20 +95,56 @@ class _OTPVerificationState extends State<OTPVerification> {
       return showToast(message: 'Invalid Otp', toastType: ToastType.warning);
     }
     if (widget.callRegisterApi) {
+      final inputReferral = authController.referralCodeController.text.trim();
+      final lastRef = authController.lastUsedReferralCode?.trim() ?? '';
+
       authController
           .verifyMobileAndEmail(
           mobileOtp: authController.mobileOtpCodeController.text,
           emailOtp: authController.emailOtpCodeController.text)
-          .then((value) {
+          .then((value) async {
         if (value.isSuccess) {
           showToast(message: value.message, typeCheck: value.isSuccess);
           authController.updateFcmToken();
-          AppsFlyerService.onUserLoggedIn();
 
-          navigate(
-              context: context,
-              isRemoveUntil: true,
-              page: const DashboardScreen());
+          String referralCode = inputReferral;
+          if (referralCode.isEmpty) {
+            referralCode = lastRef;
+          }
+          if (referralCode.isEmpty) {
+            referralCode = authController.lastUsedReferralCode?.trim() ?? '';
+          }
+          if (referralCode.isEmpty) {
+            referralCode = (await AppsFlyerService.getSavedReferralCode()) ?? '';
+          }
+
+          final pendingJobId = AppsFlyerService.getPendingJobId();
+
+          // Rule 1: ONLY navigate to Job Detail if referral code was used in registration
+          if (referralCode.isNotEmpty) {
+            AppsFlyerService.onRegisterWithReferral(referralCode);
+
+            // Navigate to Dashboard as base, then open Job Details
+            navigate(
+                context: context,
+                isRemoveUntil: true,
+                page: const DashboardScreen());
+
+            Future.delayed(const Duration(milliseconds: 350), () {
+              if (pendingJobId != null && pendingJobId > 0) {
+                AppRouter.goToJob(pendingJobId, referralCode: referralCode);
+              } else {
+                AppRouter.goToJobByReferral(referralCode);
+              }
+            });
+          } else {
+            // Rule 2: If NO referral code was used in registration -> go to normal Dashboard
+            AppsFlyerService.onNormalAuth();
+            navigate(
+                context: context,
+                isRemoveUntil: true,
+                page: const DashboardScreen());
+          }
         } else {
           showToast(message: value.message, typeCheck: value.isSuccess);
         }
@@ -119,7 +156,8 @@ class _OTPVerificationState extends State<OTPVerification> {
         if (value.isSuccess) {
           showToast(message: value.message, typeCheck: value.isSuccess);
           authController.updateFcmToken();
-          AppsFlyerService.onUserLoggedIn();
+          // Rule 3: Normal login via phone + OTP -> ALWAYS go to normal Dashboard
+          AppsFlyerService.onNormalAuth();
 
           navigate(
               context: context,

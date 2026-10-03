@@ -26,10 +26,48 @@ class JobRepo {
     return response;
   }
 
-  Future<Response> applyJob(Map<String, dynamic> data) async {
-    Response response = await apiClient.postData("hrms/job-applications", "applyJob", data);
+  Future<Response> applyJob(dynamic data) async {
+    Response response = await apiClient.postData("job-applications-apply", "applyJob", data);
     if (response.statusCode != 200 && response.statusCode != 201) {
       response = await apiClient.postData("job-applications", "applyJob", data);
+    }
+    return response;
+  }
+
+  Future<Response> getAppliedJobs() async {
+    Response response = await apiClient.getData("api/job-applications", "getAppliedJobs");
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      response = await apiClient.getData("hrms/job-applications", "getAppliedJobs");
+    }
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      response = await apiClient.getData("job-applications", "getAppliedJobs");
+    }
+    return response;
+  }
+
+  Future<Response> getAppliedJobDetails(dynamic appliedId) async {
+    Response response = await apiClient.getData("api/job-applications/$appliedId", "getAppliedJobDetails");
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      response = await apiClient.getData("hrms/job-applications/$appliedId", "getAppliedJobDetails");
+    }
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      response = await apiClient.getData("job-applications/$appliedId", "getAppliedJobDetails");
+    }
+    return response;
+  }
+
+  Future<Response> getCandidateProfile() async {
+    Response response = await apiClient.getData("candidate-profile", "getCandidateProfile");
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      response = await apiClient.getData("candidate-profile", "getCandidateProfile");
+    }
+    return response;
+  }
+
+  Future<Response> updateCandidateProfile(dynamic body) async {
+    Response response = await apiClient.postData("candidate-profile", "updateCandidateProfile", body);
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      response = await apiClient.postData("candidate-profile", "updateCandidateProfile", body);
     }
     return response;
   }

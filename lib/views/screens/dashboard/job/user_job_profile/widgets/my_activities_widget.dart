@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/services/theme.dart';
 import 'package:vlr/services/constants.dart';
 import 'package:vlr/views/screens/dashboard/job/applied_job_history_screen.dart';
 
@@ -36,7 +37,7 @@ class MyActivitiesWidget extends StatelessWidget {
                 context: context,
                 icon: Icons.assignment_outlined,
                 iconBgColor: const Color(0xFFE6F4EA),
-                iconColor: const Color(0xFF0D8A48),
+                iconColor: primaryColor,
                 title: "My Applications",
                 subtitle: "Check all your job applied and selected status here",
                 onTap: () {
@@ -53,7 +54,7 @@ class MyActivitiesWidget extends StatelessWidget {
                 context: context,
                 icon: Icons.phone_callback_outlined,
                 iconBgColor: const Color(0xFFE6F4EA),
-                iconColor: const Color(0xFF0D8A48),
+                iconColor: primaryColor,
                 title: "My Calls",
                 subtitle: "Check all your responses and upcoming calls here",
                 onTap: () {

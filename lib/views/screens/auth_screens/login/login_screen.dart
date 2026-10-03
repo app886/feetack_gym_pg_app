@@ -4,6 +4,7 @@ import 'package:vlr/controllers/auth_controller.dart';
 import 'package:vlr/controllers/permission_controller.dart';
 import 'package:vlr/firebase/get_fcm_token.dart';
 import 'package:vlr/services/constants.dart';
+import 'package:vlr/services/app_router.dart';
 import 'package:vlr/views/screens/auth_screens/login/widget/auth_mid_section.dart';
 import 'package:vlr/views/screens/auth_screens/login/widget/auth_top_section.dart';
 import 'package:vlr/views/screens/auth_screens/login/widget/login_bottom_section.dart';
@@ -50,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Get.offAll(() => const DashboardScreen());
+                AppRouter.goToDashboard();
               },
               child: Text(
                 "Skip",

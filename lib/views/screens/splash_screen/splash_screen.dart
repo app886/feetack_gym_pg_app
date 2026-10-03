@@ -2,12 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vlr/controllers/auth_controller.dart';
-import 'package:vlr/views/screens/auth_screens/login/login_screen.dart';
-import 'package:vlr/views/screens/dashboard/dashboard_screen.dart';
 
 import '../../../services/constants.dart';
 import '../../../services/theme.dart';
 import 'package:vlr/services/appsflyer_service.dart';
+import 'package:vlr/services/app_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -64,29 +63,20 @@ class _SplashScreenState extends State<SplashScreen>
         // Mark app ready BEFORE navigation — user IS logged in
         AppsFlyerService.markAppReady(isLoggedIn: true);
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-          );
+          AppRouter.goToDashboard();
         }
       } else {
         // Token invalid/expired — user is NOT logged in
         AppsFlyerService.markAppReady(isLoggedIn: false);
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          );
+          AppRouter.goToLogin();
         }
       }
     } else {
       // No token — user is NOT logged in
       AppsFlyerService.markAppReady(isLoggedIn: false);
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        AppRouter.goToLogin();
       }
     }
   }

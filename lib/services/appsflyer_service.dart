@@ -3,9 +3,9 @@ import 'dart:developer';
 import 'package:app_links/app_links.dart';
 import 'package:appsflyer_sdk/appsflyer_sdk.dart';
 import 'package:get/get.dart';
-import 'package:vlr/data/models/job_post_model.dart';
-import 'package:vlr/views/screens/auth_screens/register/register_screen.dart';
-import 'package:vlr/views/screens/dashboard/job/job_detail_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vlr/controllers/auth_controller.dart';
+import 'package:vlr/services/app_router.dart';
 
 class AppsFlyerService {
   static AppsflyerSdk? _appsflyerSdk;
@@ -225,49 +225,104 @@ class AppsFlyerService {
     }
 
     if (jobId != null) {
+      if (referralCode.isNotEmpty) {
+        saveReferralToPrefs(referralCode, jobId: jobId);
+      }
+      final isLoggedIn = checkIsLoggedIn();
       if (_isAppReady) {
-        // App is ready — navigate immediately based on login status
-        _navigateBasedOnAuth(jobId, referralCode);
+        if (isLoggedIn) {
+          log('App ready & user logged in -> Navigating to Job ID: $jobId, referral: $referralCode', name: 'APPSFLYER');
+          AppRouter.goToJob(jobId, referralCode: referralCode.isNotEmpty ? referralCode : null);
+        } else {
+          log('App ready & user NOT logged in -> Storing pending & navigating to Register with referral: $referralCode', name: 'APPSFLYER');
+          setPendingJob(jobId, referralCode.isNotEmpty ? referralCode : null);
+          AppRouter.goToRegister(referralCode: referralCode.isNotEmpty ? referralCode : null);
+        }
       } else {
         // App is still loading (splash/auth) — store for later
-        _pendingJobId = jobId;
-        _pendingReferralCode = referralCode;
+        setPendingJob(jobId, referralCode.isNotEmpty ? referralCode : null);
         log('Stored pending job ID: $jobId, referralCode: $referralCode (app not ready yet)', name: 'APPSFLYER');
       }
     }
   }
 
-  /// Check auth status and navigate accordingly
-  /// - If logged in → JobDetailScreen
-  /// - If NOT logged in → RegisterScreen with referral code
-  static void _navigateBasedOnAuth(int jobId, String referralCode) {
-    log('Navigating based on auth. Job ID: $jobId, Referral: $referralCode, LoggedIn: $_isUserLoggedIn', name: 'APPSFLYER');
-    
-    if (_isUserLoggedIn) {
-      // User is logged in → go directly to job detail page
-      _navigateToJob(jobId);
-    } else {
-      // User is NOT logged in → go to Register screen with referral code
-      _navigateToRegister(referralCode, jobId);
+  /// Check if user is currently authenticated
+  static bool checkIsLoggedIn() {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        final authController = Get.find<AuthController>();
+        final token = authController.getUserToken();
+        return authController.isLoggedIn() && token.isNotEmpty;
+      }
+    } catch (e) {
+      log('Error checking login in AppsFlyerService: $e', name: 'APPSFLYER');
+    }
+    return _isUserLoggedIn;
+  }
+
+  /// Store pending job ID and referral code for post-auth navigation & persist in SharedPreferences
+  static void setPendingJob(int jobId, String? referralCode) {
+    _pendingJobId = jobId;
+    _pendingReferralCode = referralCode;
+    log('Set pending job ID: $jobId, referralCode: $referralCode', name: 'APPSFLYER');
+    if (referralCode != null && referralCode.isNotEmpty) {
+      saveReferralToPrefs(referralCode, jobId: jobId);
     }
   }
 
-  /// Navigate to JobDetailScreen with given job ID
-  static void _navigateToJob(int jobId) {
-    log('Navigating to Job ID: $jobId', name: 'APPSFLYER');
-    Get.to(() => JobDetailScreen(
-      job: JobPostModel(id: jobId),
-    ));
+  /// Persist referral code and jobId to SharedPreferences
+  static Future<void> saveReferralToPrefs(String referralCode, {int? jobId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (referralCode.isNotEmpty) {
+        await prefs.setString('saved_referral_code', referralCode);
+        log('Saved referral code to SharedPreferences: $referralCode', name: 'APPSFLYER');
+      }
+      if (jobId != null && jobId > 0) {
+        await prefs.setInt('saved_pending_job_id', jobId);
+        log('Saved pending job ID to SharedPreferences: $jobId', name: 'APPSFLYER');
+      }
+    } catch (e) {
+      log('Error saving referral to prefs: $e', name: 'APPSFLYER');
+    }
   }
 
-  /// Navigate to RegisterScreen with referral code and pending job ID
-  static void _navigateToRegister(String referralCode, int jobId) {
-    log('Navigating to RegisterScreen with referral: $referralCode, pendingJob: $jobId', name: 'APPSFLYER');
-    // Store the job ID so after registration + login, user can still go to the job
-    _pendingJobId = jobId;
-    Get.to(() => RegisterScreen(
-      referralCode: referralCode.isNotEmpty ? referralCode : null,
-    ));
+  /// Retrieve saved referral code from SharedPreferences
+  static Future<String?> getSavedReferralCode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('saved_referral_code');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Retrieve saved pending job ID from SharedPreferences
+  static Future<int?> getSavedPendingJobId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt('saved_pending_job_id');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Clear saved referral code & pending job ID from SharedPreferences
+  static Future<void> clearSavedReferral() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('saved_referral_code');
+      await prefs.remove('saved_pending_job_id');
+      log('Cleared saved referral & pending job ID from SharedPreferences', name: 'APPSFLYER');
+    } catch (_) {}
+  }
+
+  static int? getPendingJobId() => _pendingJobId;
+  static String? getPendingReferralCode() => _pendingReferralCode;
+  static void clearPending() {
+    _pendingJobId = null;
+    _pendingReferralCode = null;
+    clearSavedReferral();
   }
 
   /// Call this from splash screen after auth check completes
@@ -275,38 +330,28 @@ class AppsFlyerService {
   static void markAppReady({required bool isLoggedIn}) {
     _isAppReady = true;
     _isUserLoggedIn = isLoggedIn;
-    
-    log('App marked ready. LoggedIn: $isLoggedIn, pendingJobId: $_pendingJobId, pendingReferral: $_pendingReferralCode', name: 'APPSFLYER');
-    
-    if (_pendingJobId != null) {
-      log('Processing pending deep link for job: $_pendingJobId', name: 'APPSFLYER');
-      final jobId = _pendingJobId!;
-      final referralCode = _pendingReferralCode ?? '';
-      _pendingJobId = null;
-      _pendingReferralCode = null;
-      
-      // Small delay to ensure navigation stack is ready
-      Future.delayed(const Duration(milliseconds: 500), () {
-        _navigateBasedOnAuth(jobId, referralCode);
-      });
-    }
+    log('App marked ready. LoggedIn: $isLoggedIn', name: 'APPSFLYER');
   }
 
-  /// Call this after user successfully logs in or registers
-  /// to navigate to any pending job from a deep link
-  static void onUserLoggedIn() {
+  /// Navigate to JobDetailScreen with given job ID and referral code via GoRouter
+  static void goToJob(int jobId, {String? referralCode}) {
+    AppRouter.goToJob(jobId, referralCode: referralCode);
+  }
+
+  /// Call this when user logs in normally via phone/OTP or registers without referral code
+  /// to ensure user lands on the normal Dashboard
+  static void onNormalAuth() {
     _isUserLoggedIn = true;
-    
-    if (_pendingJobId != null) {
-      log('User logged in, navigating to pending job: $_pendingJobId', name: 'APPSFLYER');
-      final jobId = _pendingJobId!;
-      _pendingJobId = null;
-      _pendingReferralCode = null;
-      
-      Future.delayed(const Duration(milliseconds: 500), () {
-        _navigateToJob(jobId);
-      });
-    }
+    _pendingJobId = null;
+    _pendingReferralCode = null;
+    log('Normal auth completed. User logged in, pending deep links cleared.', name: 'APPSFLYER');
+  }
+
+  /// Call this when user registers WITH a referral code
+  static void onRegisterWithReferral(String referralCode) {
+    _isUserLoggedIn = true;
+    _pendingReferralCode = referralCode;
+    log('Registration with referral completed: $referralCode, pendingJobId: $_pendingJobId', name: 'APPSFLYER');
   }
 
   /// Generate a shareable OneLink for a specific job

@@ -1,12 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/services/theme.dart';
+import 'package:vlr/data/models/candidate_profile_model.dart';
+import 'package:vlr/views/screens/dashboard/job/user_job_profile/screens/edit_resume_job_profile_screen.dart';
 import 'package:vlr/services/constants.dart';
 
 class ResumeWidget extends StatelessWidget {
-  const ResumeWidget({super.key});
+  final CandidateProfileData? candidateProfile;
+
+  const ResumeWidget({
+    super.key,
+    this.candidateProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
+    String resumeName = "MohdZaid_Resume.pdf";
+    if (candidateProfile?.resumePath != null && candidateProfile!.resumePath!.isNotEmpty) {
+      resumeName = candidateProfile!.resumePath!.split('/').last;
+    }
+
+    String updatedAtText = "Last updated recently";
+    if (candidateProfile?.resumeUpdatedAt != null && candidateProfile!.resumeUpdatedAt!.isNotEmpty) {
+      updatedAtText = "Last updated ${candidateProfile!.resumeUpdatedAt}";
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,18 +42,21 @@ class ResumeWidget extends StatelessWidget {
             ),
             InkWell(
               onTap: () {
-                showToast(message: "Update Resume clicked", toastType: ToastType.info);
+                navigate(
+                  context: context,
+                  page: EditResumeJobProfileScreen(candidateProfile: candidateProfile),
+                );
               },
               child: Row(
                 children: [
-                  Icon(Icons.edit_outlined, size: 14.sp, color: const Color(0xFF0D8A48)),
+                  Icon(Icons.edit_outlined, size: 14.sp, color: primaryColor),
                   SizedBox(width: 2.w),
                   Text(
                     "Edit",
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0D8A48),
+                      color: primaryColor,
                     ),
                   ),
                 ],
@@ -47,55 +68,66 @@ class ResumeWidget extends StatelessWidget {
         SizedBox(height: 6.h),
 
         // Resume Card
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: const Color(0xFFEAECF0)),
-          ),
-          padding: EdgeInsets.all(16.w),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(10.r),
+        GestureDetector(
+          onTap: () {
+            navigate(
+              context: context,
+              page: EditResumeJobProfileScreen(candidateProfile: candidateProfile),
+            );
+          },
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: const Color(0xFFEAECF0)),
+            ),
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Icon(Icons.picture_as_pdf_rounded, color: const Color(0xFFDC2626), size: 24.sp),
                 ),
-                child: Icon(Icons.picture_as_pdf_rounded, color: const Color(0xFFDC2626), size: 24.sp),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "MohdZaid_Resume.pdf",
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF101828),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        resumeName,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF101828),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      "Last updated 21st Aug 2024",
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: const Color(0xFF667085),
+                      SizedBox(height: 2.h),
+                      Text(
+                        updatedAtText,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: const Color(0xFF667085),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                onPressed: () {
-                  showToast(message: "Resume options clicked", toastType: ToastType.info);
-                },
-                icon: Icon(Icons.more_vert_rounded, color: const Color(0xFF667085), size: 20.sp),
-              ),
-            ],
+                IconButton(
+                  onPressed: () {
+                    navigate(
+                      context: context,
+                      page: EditResumeJobProfileScreen(candidateProfile: candidateProfile),
+                    );
+                  },
+                  icon: Icon(Icons.more_vert_rounded, color: const Color(0xFF667085), size: 20.sp),
+                ),
+              ],
+            ),
           ),
         ),
       ],

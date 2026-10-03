@@ -77,6 +77,14 @@ dependencies:
   flutter_screenutil: ^5.9.3
   animated_text_kit: ^4.3.0
   app_links: ^7.0.0
+  go_router: ^14.2.0
+  file_picker: ^8.1.2
+  device_info_plus: ^11.3.0
+  uuid: ^4.5.1
+  form_field_validator: ^1.1.0
+  flutter_widget_from_html_core: ^0.15.1
+  animations: ^2.0.11
+  agora_rtc_engine:
 
 dev_dependencies:
   flutter_test:
@@ -101,6 +109,7 @@ flutter:
     - assets/images/
     - assets/images/feetrack_logo.jpg
     - assets/svgs/
+    - assets/icons/
 
 flutter_assets:
   assets_path: assets/

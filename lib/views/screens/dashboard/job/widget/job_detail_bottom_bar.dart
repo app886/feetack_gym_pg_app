@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:vlr/controllers/job_controller.dart';
+import 'package:vlr/services/theme.dart';
+import 'package:vlr/views/screens/dashboard/job/widget/job_apply_bottom_sheet.dart';
 
 class JobDetailBottomBar extends StatefulWidget {
-  const JobDetailBottomBar({super.key});
+  final int? jobId;
+  final String? jobTitle;
+  final String? referralCode;
+
+  const JobDetailBottomBar({
+    super.key,
+    this.jobId,
+    this.jobTitle,
+    this.referralCode,
+  });
 
   @override
   State<JobDetailBottomBar> createState() => _JobDetailBottomBarState();
@@ -10,6 +23,26 @@ class JobDetailBottomBar extends StatefulWidget {
 
 class _JobDetailBottomBarState extends State<JobDetailBottomBar> {
   bool _isBookmarked = false;
+
+  void _onApplyJob() {
+    if (widget.jobId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to apply: Job ID missing.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Open bottom sheet for filling application details & uploading CV/Resume
+    JobApplyBottomSheet.show(
+      context,
+      jobId: widget.jobId!,
+      jobTitle: widget.jobTitle,
+      referralCode: widget.referralCode,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +85,7 @@ class _JobDetailBottomBarState extends State<JobDetailBottomBar> {
               ),
               child: Icon(
                 _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                color: _isBookmarked ? const Color(0xFFFA6A48) : const Color(0xFF475467),
+                color: _isBookmarked ? primaryColor : const Color(0xFF475467),
                 size: 24.sp,
               ),
             ),
@@ -60,39 +93,45 @@ class _JobDetailBottomBarState extends State<JobDetailBottomBar> {
           SizedBox(width: 16.w),
           // Apply Now Button
           Expanded(
-            child: GestureDetector(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Application Submitted Successfully!'),
-                    backgroundColor: Color(0xFFFA6A48),
+            child: GetBuilder<JobController>(
+              builder: (jobController) {
+                return GestureDetector(
+                  onTap: jobController.isApplying ? null : _onApplyJob,
+                  child: Container(
+                    height: 56.w,
+                    decoration: BoxDecoration(
+                      color: primaryColor, // Royal Blue
+                      borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withValues(alpha: 0.25),
+                          blurRadius: 8.r,
+                          offset: Offset(0, 4.h),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: jobController.isApplying
+                        ? SizedBox(
+                            width: 24.w,
+                            height: 24.w,
+                            child: const CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : Text(
+                            "APPLY NOW",
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                   ),
                 );
               },
-              child: Container(
-                height: 56.w,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFA6A48), // Coral Orange
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFA6A48).withValues(alpha: 0.2),
-                      blurRadius: 8.r,
-                      offset: Offset(0, 4.h),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  "APPLY NOW",
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
             ),
           ),
         ],

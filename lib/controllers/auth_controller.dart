@@ -10,6 +10,7 @@ import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:vlr/data/models/response/response_model.dart';
 import 'package:vlr/data/models/user_model.dart';
 import 'package:vlr/firebase/get_fcm_token.dart';
+import 'package:vlr/services/appsflyer_service.dart';
 
 import '../data/repositories/auth_repo.dart';
 
@@ -55,6 +56,7 @@ class AuthController extends GetxController implements GetxService {
   TextEditingController mobileOtpCodeController = TextEditingController();
   TextEditingController emailOtpCodeController = TextEditingController();
   TextEditingController referralCodeController = TextEditingController();
+  String? lastUsedReferralCode;
 
   Future<ResponseModel> registerUser() async {
     log('----------- registerUser Called ----------');
@@ -64,12 +66,25 @@ class AuthController extends GetxController implements GetxService {
     update();
 
     try {
+      String referral = referralCodeController.text.trim();
+      if (referral.isEmpty) {
+        referral = (await AppsFlyerService.getSavedReferralCode()) ?? '';
+      }
+      if (referral.isNotEmpty) {
+        lastUsedReferralCode = referral;
+        AppsFlyerService.saveReferralToPrefs(referral);
+      }
+
+      String deviceId = await authRepo.getDeviceId();
+      log("Phone Device ID (registerUser): $deviceId");
+
       Map<String, dynamic> data = {
         "name": fullNameController.text.trim(),
         "email": emailController.text.trim(),
         "mobile": mobileNoController.text.trim(),
         "otp": "123456",
-        "referral_code": referralCodeController.text.trim(),
+        "device_id": deviceId,
+        if (referral.isNotEmpty) "referral_code": referral,
       };
 
       Response response = await authRepo.postUserRegister(
@@ -113,11 +128,27 @@ class AuthController extends GetxController implements GetxService {
     update();
 
     try {
+      String referralCode = referralCodeController.text.trim();
+      if (referralCode.isEmpty) {
+        referralCode = lastUsedReferralCode ?? '';
+      }
+      if (referralCode.isEmpty) {
+        referralCode = (await AppsFlyerService.getSavedReferralCode()) ?? '';
+      }
+      if (referralCode.isNotEmpty) {
+        lastUsedReferralCode = referralCode;
+        AppsFlyerService.saveReferralToPrefs(referralCode);
+      }
+
+      String deviceId = await authRepo.getDeviceId();
+
       Map<String, dynamic> data = {
         "email": emailController.text.trim(),
         "mobile": mobileNoController.text.trim(),
         "email_otp": emailOtpCodeController.text.trim(),
         "mobile_otp": mobileOtpCodeController.text.trim(),
+        "device_id": deviceId,
+        if (referralCode.isNotEmpty) "referral_code": referralCode,
       };
 
       Response response = await authRepo.postVerifyMobileAndEmail(
@@ -139,6 +170,7 @@ class AuthController extends GetxController implements GetxService {
         emailController.clear();
         mobileOtpCodeController.clear();
         emailOtpCodeController.clear();
+        referralCodeController.clear();
 
         responseModel = ResponseModel(
             true, response.body['message'] ?? "success verifyMobileAndEmail ");
@@ -228,8 +260,8 @@ class AuthController extends GetxController implements GetxService {
     try {
       Map<String, dynamic> data = {
         "mobile": mobileNoController.text.trim(),
-        "channel": "whatsapp",
-        // "channel": isSMS ? "sms" : "whatsapp",
+        // "channel": "whatsapp",
+        "channel": isSMS ? "sms" : "whatsapp",
       };
 
       Response response = await authRepo.postLogin(
@@ -501,6 +533,7 @@ class AuthController extends GetxController implements GetxService {
         "name": fullNameController.text.trim(),
         "email": emailController.text.trim(),
         "mobile": mobileNoController.text.trim(),
+        if (dobController.text.isNotEmpty) "dob": dobController.text.trim(),
         "_method": "PUT", // Method spoofing for multipart PUT
       };
 

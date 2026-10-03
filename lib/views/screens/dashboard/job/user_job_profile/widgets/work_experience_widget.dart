@@ -1,12 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/services/theme.dart';
+import 'package:vlr/data/models/candidate_profile_model.dart';
 import 'package:vlr/services/constants.dart';
+import 'package:vlr/views/screens/dashboard/job/user_job_profile/screens/intership_and_work_experience_screen.dart';
 
 class WorkExperienceWidget extends StatelessWidget {
-  const WorkExperienceWidget({super.key});
+  final CandidateProfileData? candidateProfile;
+
+  const WorkExperienceWidget({
+    super.key,
+    this.candidateProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasWorkExp = candidateProfile?.workExperiences != null && candidateProfile!.workExperiences!.isNotEmpty;
+    final exp = hasWorkExp ? candidateProfile!.workExperiences!.first : null;
+
+    final jobTitle = exp?.jobTitle ?? "Flutter Developer";
+    final company = exp?.company ?? "Zaleem";
+    final industry = exp?.industry ?? "Ecommerce";
+    final isCurrentlyWorking = exp?.currentlyWorking ?? true;
+    final type = exp?.type ?? "Full Time";
+
+    final totalYears = candidateProfile?.totalExperienceYears ?? 0;
+    final totalMonths = candidateProfile?.totalExperienceMonths ?? 0;
+    final salary = candidateProfile?.currentMonthlySalary != null
+        ? "₹ ${candidateProfile!.currentMonthlySalary}"
+        : "₹ 35,000";
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,15 +47,18 @@ class WorkExperienceWidget extends StatelessWidget {
             ),
             TextButton.icon(
               onPressed: () {
-                showToast(message: "Add Experience clicked", toastType: ToastType.info);
+                navigate(
+                  context: context,
+                  page: const IntershipAndWorkExperienceScreen(isInternship: false),
+                );
               },
-              icon: Icon(Icons.add, size: 16.sp, color: const Color(0xFF0D8A48)),
+              icon: Icon(Icons.add, size: 16.sp, color: primaryColor),
               label: Text(
                 "Add",
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0D8A48),
+                  color: primaryColor,
                 ),
               ),
             ),
@@ -69,7 +95,7 @@ class WorkExperienceWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Flutter Developer",
+                          jobTitle,
                           style: TextStyle(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w800,
@@ -77,7 +103,7 @@ class WorkExperienceWidget extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "Zaleem",
+                          company,
                           style: TextStyle(
                             fontSize: 13.sp,
                             fontWeight: FontWeight.w500,
@@ -89,18 +115,21 @@ class WorkExperienceWidget extends StatelessWidget {
                   ),
                   InkWell(
                     onTap: () {
-                      showToast(message: "Edit Experience clicked", toastType: ToastType.info);
+                      navigate(
+                        context: context,
+                        page: const IntershipAndWorkExperienceScreen(isInternship: false),
+                      );
                     },
                     child: Row(
                       children: [
-                        Icon(Icons.edit_outlined, size: 14.sp, color: const Color(0xFF0D8A48)),
+                        Icon(Icons.edit_outlined, size: 14.sp, color: primaryColor),
                         SizedBox(width: 2.w),
                         Text(
                           "Edit",
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0D8A48),
+                            color: primaryColor,
                           ),
                         ),
                       ],
@@ -111,11 +140,9 @@ class WorkExperienceWidget extends StatelessWidget {
 
               SizedBox(height: 12.h),
 
-              _buildFieldLabelValue("Job Role", "Software Development"),
+              _buildFieldLabelValue("Job Role", jobTitle),
               SizedBox(height: 6.h),
-              _buildFieldLabelValue("Industry", "Ecommerce"),
-              SizedBox(height: 6.h),
-              _buildFieldLabelValue("Skills", "Smart Contract Development"),
+              _buildFieldLabelValue("Industry", industry),
 
               SizedBox(height: 12.h),
 
@@ -123,8 +150,8 @@ class WorkExperienceWidget extends StatelessWidget {
                 spacing: 8.w,
                 runSpacing: 6.h,
                 children: [
-                  _buildStatusChip("Currently Working"),
-                  _buildStatusChip("Full Time"),
+                  if (isCurrentlyWorking) _buildStatusChip("Currently Working"),
+                  if (type.isNotEmpty) _buildStatusChip(type),
                 ],
               ),
             ],
@@ -145,21 +172,36 @@ class WorkExperienceWidget extends StatelessWidget {
             children: [
               _buildSummaryRow(
                 title: "Total Years of Experience",
-                value: "0 years, 0 months",
-                onTap: () {},
+                value: "$totalYears years, $totalMonths months",
+                onTap: () {
+                  navigate(
+                    context: context,
+                    page: const IntershipAndWorkExperienceScreen(isInternship: false),
+                  );
+                },
               ),
               const Divider(height: 1, color: Color(0xFFF2F4F7)),
               _buildSummaryRow(
                 title: "Current Monthly Salary",
-                value: "₹ 35,000",
-                onTap: () {},
+                value: salary,
+                onTap: () {
+                  navigate(
+                    context: context,
+                    page: const IntershipAndWorkExperienceScreen(isInternship: false),
+                  );
+                },
               ),
               const Divider(height: 1, color: Color(0xFFF2F4F7)),
               _buildSummaryRow(
                 title: "Internships",
                 value: "+ Add",
-                valueColor: const Color(0xFF0D8A48),
-                onTap: () {},
+                valueColor: primaryColor,
+                onTap: () {
+                  navigate(
+                    context: context,
+                    page: const IntershipAndWorkExperienceScreen(isInternship: true),
+                  );
+                },
               ),
             ],
           ),

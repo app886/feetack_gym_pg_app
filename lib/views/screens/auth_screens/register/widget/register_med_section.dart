@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:vlr/controllers/auth_controller.dart';
 import 'package:vlr/services/constants.dart';
 import 'package:vlr/services/theme.dart';
+import 'package:vlr/services/appsflyer_service.dart';
 import 'package:vlr/views/base/common_button.dart';
 import 'package:vlr/views/base/custom_image.dart';
 import 'package:vlr/views/screens/auth_screens/login/login_screen.dart';
@@ -26,22 +25,22 @@ class RegisterMedSection extends StatefulWidget {
 class _RegisterMedSectionState extends State<RegisterMedSection> {
   final _formKey = GlobalKey<FormState>();
 
-  String generateReferralCode() {
-    final random = Random();
-    final digits = List.generate(9, (_) => random.nextInt(10)).join();
-    return 'Feetrack$digits';
-  }
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final auth = Get.find<AuthController>();
-      // Use passed referral code if available, otherwise generate a random one
-      auth.referralCodeController.text =
-          (widget.referralCode != null && widget.referralCode!.isNotEmpty)
-              ? widget.referralCode!
-              : generateReferralCode();
+      // Check passed referral code first, otherwise check SharedPreferences
+      if (widget.referralCode != null && widget.referralCode!.isNotEmpty) {
+        auth.referralCodeController.text = widget.referralCode!;
+      } else {
+        final savedCode = await AppsFlyerService.getSavedReferralCode();
+        if (savedCode != null && savedCode.isNotEmpty) {
+          auth.referralCodeController.text = savedCode;
+        } else {
+          auth.referralCodeController.clear();
+        }
+      }
     });
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vlr/services/theme.dart';
 import 'package:get/get.dart';
 import 'package:vlr/controllers/job_candidate_profile_update_controller.dart';
 import 'package:vlr/data/models/candidate_profile_model.dart';
@@ -207,7 +208,7 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.r),
-                                borderSide: const BorderSide(color: Color(0xFF0D8A48), width: 1.5),
+                                borderSide: const BorderSide(color: primaryColor, width: 1.5),
                               ),
                             ),
                           ),
@@ -215,7 +216,7 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                         SizedBox(width: 10.w),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0D8A48),
+                            backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
                             shape: RoundedRectangleBorder(
@@ -261,9 +262,9 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                           return Container(
                             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDF4),
+                              color: const Color(0xFFEBF0FF),
                               borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(color: const Color(0xFF10B981)),
+                              border: Border.all(color: primaryColor),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -273,13 +274,13 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                                   style: TextStyle(
                                     fontSize: 12.sp,
                                     fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF047857),
+                                    color: primaryColor,
                                   ),
                                 ),
                                 SizedBox(width: 6.w),
                                 GestureDetector(
                                   onTap: () => _removeSkill(skill),
-                                  child: Icon(Icons.cancel_rounded, size: 16.sp, color: const Color(0xFF047857)),
+                                  child: Icon(Icons.cancel_rounded, size: 16.sp, color: primaryColor),
                                 ),
                               ],
                             ),
@@ -317,10 +318,10 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                           child: Container(
                             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                             decoration: BoxDecoration(
-                              color: isAdded ? const Color(0xFFECFDF5) : const Color(0xFFF8FAFC),
+                              color: isAdded ? const Color(0xFFEBF0FF) : const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(20.r),
                               border: Border.all(
-                                color: isAdded ? const Color(0xFF10B981) : const Color(0xFFE2E8F0),
+                                color: isAdded ? primaryColor : const Color(0xFFE2E8F0),
                               ),
                             ),
                             child: Row(
@@ -329,7 +330,7 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                                 Icon(
                                   isAdded ? Icons.check_rounded : Icons.add_rounded,
                                   size: 14.sp,
-                                  color: isAdded ? const Color(0xFF047857) : const Color(0xFF64748B),
+                                  color: isAdded ? primaryColor : const Color(0xFF64748B),
                                 ),
                                 SizedBox(width: 4.w),
                                 Text(
@@ -337,7 +338,7 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                                   style: TextStyle(
                                     fontSize: 12.sp,
                                     fontWeight: isAdded ? FontWeight.w700 : FontWeight.w500,
-                                    color: isAdded ? const Color(0xFF047857) : const Color(0xFF475467),
+                                    color: isAdded ? primaryColor : const Color(0xFF475467),
                                   ),
                                 ),
                               ],
@@ -374,7 +375,7 @@ class _EditSkillsBottomSheetState extends State<EditSkillsBottomSheet> {
                     height: 50.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D8A48),
+                        backgroundColor: primaryColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
